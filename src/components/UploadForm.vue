@@ -9,48 +9,49 @@
 </template>
 
 <script>
-    export default {
-        data() {
-            return {
-                selectedFile: null,
-            };
+export default {
+    data() {
+        return {
+            selectedFile: null,
+        };
+    },
+    methods: {
+        onFileChange(event) {
+            this.selectedFile = event.target.files[0];
         },
-        methods: {
-            onFileChange(event) {
-                this.selectedFile = event.target.files[0];
-            },
-            async uploadImage() {
-                if (!this.selectedFile) {
-                    alert("Veuillez sélectionner un fichier.");
-                    return;
-                }
-        
-                const formData = new FormData();
-                formData.append("image", this.selectedFile);
-        
-                try {
-                    const response = await fetch("/upload", {
-                        method: "POST",
-                        body: formData,
-                    });
-            
-                    if (!response.ok) {
-                        throw new Error("Erreur lors de l'importation de l'image.");
-                    }
-            
-                    const result = await response.json();
+        async uploadImage() {
+            if (!this.selectedFile) {
+                alert("Veuillez sélectionner un fichier.");
+                return;
+            }
 
-                    this.$emit("image-imported", result.fileUrl);
+            const formData = new FormData();
+            formData.append("image", this.selectedFile);
 
-                    console.log("Image importée avec succès:", result);
-                } catch (error) {
-                    console.error("Erreur:", error);
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erreur lors de l'importation de l'image.");
                 }
-            },
+
+                const result = await response.json();
+
+                this.$emit("image-imported", result.fileUrl);
+                this.$emit("grid-imported", result.grid);
+
+                console.log(result.message, result.fileUrl);
+            } catch (error) {
+                console.error("Erreur:", error);
+            }
         },
-    };
+    },
+};
 </script>
 
 <style scoped>
-    /* Ajoutez vos styles ici */
+/* Ajoutez vos styles ici */
 </style>

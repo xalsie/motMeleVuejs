@@ -21,6 +21,7 @@ export class motMelee {
         console.time("timerRecognizeImage");
 
         const worker = await this.initializeWorker();
+
         const grid = await this.recognizeImage(worker, this.getFilePath());
         await worker.terminate();
 
@@ -37,6 +38,12 @@ export class motMelee {
         console.timeEnd("timerResolveGrid");
         console.timeEnd("TimerTotal");
         console.log("end solving");
+
+        return {
+            grid: grid,
+            words: words,
+            letters: letters,
+        };
     }
 
     async initializeWorker() {
@@ -56,7 +63,7 @@ export class motMelee {
             data: { text },
         } = await worker.recognize(imagePath);
 
-        let grid = text.split("\n").filter(line => line.length > 0);
+        let grid = text.split("\n").filter((line) => line.length > 0);
         console.log(grid);
 
         return grid;
@@ -72,7 +79,8 @@ export class motMelee {
 
     async searchWords(grid, numRows, numCols) {
         // const words = [ /* Liste des mots */ ];
-        const words = [ // image test 3 : OK : https://www.fortissimots.com/wp-content/uploads/meles_fortissimots_22.pdf
+        const words = [
+            // image test 3 : OK : https://www.fortissimots.com/wp-content/uploads/meles_fortissimots_22.pdf
             "ALPES",
             "ANGES",
             "ANTIBES",
@@ -110,7 +118,7 @@ export class motMelee {
             "VALLAURIS",
             "VENT",
             "VESUBIE",
-            "VILLAS"
+            "VILLAS",
         ];
 
         words.forEach((word) => {
@@ -130,7 +138,14 @@ export class motMelee {
 
             positions.forEach((pos) => {
                 directions.forEach((dir) => {
-                    this.checkWordInDirection(grid, word, pos, dir, numRows, numCols);
+                    this.checkWordInDirection(
+                        grid,
+                        word,
+                        pos,
+                        dir,
+                        numRows,
+                        numCols
+                    );
                 });
             });
         });
@@ -218,7 +233,9 @@ export class motMelee {
         this.letterCount.forEach((line, i) => {
             line.forEach((cell, j) => {
                 if (cell.count === 0) {
-                    console.log(`Letter "${cell.value}" at position (${i}, ${j}) is never used`);
+                    console.log(
+                        `Letter "${cell.value}" at position (${i}, ${j}) is never used`
+                    );
                 }
             });
         });

@@ -1,23 +1,44 @@
 <script setup>
-import UploadForm from './components/UploadForm.vue';
-import DisplayImage from './components/DisplayImage.vue';
-import { ref } from 'vue';
-
-const imageUrl = ref('');
-
-function handleImageUpload(url) {
-    imageUrl.value = url;
-}
+import UploadForm from "./components/UploadForm.vue";
+import DisplayImage from "./components/DisplayImage.vue";
+import DisplayGrid from "./components/DisplayGrid.vue";
+import { ref } from "vue";
 </script>
 
 <template>
     <div>
-        <!-- masque le composant UploadForm si une image a été importée -->
-        <UploadForm v-show="!imageUrl" @image-uploaded="handleImageUpload" />
-        <!-- affiche le composant DisplayImage si une image a été importée -->
+        <UploadForm
+            v-show="!imageUrl"
+            @image-imported="handleImageImported"
+            @grid-imported="handleGridImported"
+        />
+
         <DisplayImage v-show="imageUrl" :imageUrl="imageUrl" />
+
+        <DisplayGrid v-show="grid" :grid="grid" />
     </div>
 </template>
+
+<script>
+const imageUrl = ref("");
+const grid = ref([]);
+
+export default {
+    components: {
+        UploadForm,
+    },
+    methods: {
+        handleImageImported(imageData) {
+            console.log("Image imported:", imageData);
+            imageUrl.value = imageData;
+        },
+        handleGridImported(gridData) {
+            console.log("Grid imported:", gridData);
+            grid.value = gridData;
+        },
+    },
+};
+</script>
 
 <style scoped>
 /* Ajoutez vos styles ici */
