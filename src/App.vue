@@ -14,9 +14,11 @@ import { ref } from "vue";
             @grid-imported="handleGridImported"
         />
 
-        <div style="display: flex; justify-content: center; align-items: center;">
+        <div
+            style="display: flex; justify-content: center; align-items: center"
+        >
             <DisplayImage v-show="imageGridUrl" :imageUrl="imageGridUrl" />
-    
+
             <DisplayGrid v-show="imageGridUrl && grid" :grid="grid" />
         </div>
 
@@ -29,16 +31,14 @@ import { ref } from "vue";
 
         <!-- <div style="display: flex; justify-content: center; align-items: center;">
             <DisplayImage v-show="imageWordsUrl" :imageUrl="imageWordsUrl" /> -->
-    
-            <!-- <DisplayGrid v-show="grid" :grid="grid" /> -->
-        <!-- </div> -->
 
+        <!-- <DisplayGrid v-show="grid" :grid="grid" /> -->
+        <!-- </div> -->
 
         <div>
             <!-- resoudre -->
             <button @click="resolve">Résoudre</button>
         </div>
-
     </div>
 </template>
 
@@ -73,7 +73,7 @@ export default {
                     words: words.value,
                 }),
                 headers: { "Content-Type": "application/json" },
-                dataType: 'json',
+                dataType: "json",
             });
 
             if (!response.ok) {
@@ -82,7 +82,18 @@ export default {
 
             const result = await response.json();
 
-            // this.$emit("image-imported", result.fileUrl);
+            // TODO: afficher les mots dans le DOM
+            const wordsFound = result.wordsResult;
+
+            const wordElement = document.createElement("div");
+            wordElement.innerHTML = wordsFound
+                .map(
+                    (word) =>
+                        `<div>${word.word} - ${word.positions.start.row}:${word.positions.start.col} - ${word.positions.end.row}:${word.positions.end.col}</div>`
+                )
+                .join("");
+
+            document.body.appendChild(wordElement);
         },
     },
 };
