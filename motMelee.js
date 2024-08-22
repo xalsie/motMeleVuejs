@@ -163,11 +163,11 @@ export class motMelee {
             "VESUBIE",
             "VILLAS",
         ];
-
+    
         words.forEach((word) => {
             const firstLetter = word[0];
             const positions = this.findLetterPositions(grid, firstLetter);
-
+    
             const directions = [
                 { row: -1, col: 0 }, // up
                 { row: 1, col: 0 }, // down
@@ -178,24 +178,27 @@ export class motMelee {
                 { row: 1, col: -1 }, // down-left
                 { row: 1, col: 1 }, // down-right
             ];
-
+    
             positions.forEach((pos) => {
                 directions.forEach((dir) => {
-                    result.push({
-                        word: word,
-                        positions: this.checkWordInDirection(
-                            grid,
-                            word,
-                            pos,
-                            dir,
-                            numRows,
-                            numCols
-                        ),
-                    });
+                    const wordPositions = this.checkWordInDirection(
+                        grid,
+                        word,
+                        pos,
+                        dir,
+                        numRows,
+                        numCols
+                    );
+                    if (wordPositions) {
+                        result.push({
+                            word: word,
+                            positions: wordPositions,
+                        });
+                    }
                 });
             });
         });
-
+    
         return result;
     }
 
