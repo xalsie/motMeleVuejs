@@ -1,5 +1,7 @@
 import fs from "node:fs/promises";
+import compression from "compression";
 import express from "express";
+import session from 'express-session';
 import multer from "multer";
 import path from "node:path";
 import { motMelee } from "./motMelee.js";
@@ -49,10 +51,26 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+const shouldCompress = (req, res) => {
+    if (req.headers['x-no-compression']) {
+        return false;
+    }
+    return compression.filter(req, res);
+};
+
 app.use(express.static("public"));
+app.use(session({
+	secret: '001/011100110110010101100011011100100110010101110100',
+	resave: true,
+	saveUninitialized: true
+}));
+app.use(compression({ // Compress all HTTP responses
+    filter: shouldCompress,
+    threshold: 0
+}));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // __dirname is not defined in ES module scope
 app.use(
     "/uploads",
     express.static(
@@ -72,7 +90,8 @@ app.post("/upload", upload.single("image"), async (req, res) => {
         motMeleeInstance.setFilePath(path.resolve(req.file.path));
 
         try {
-            const { grid, words, letters } = await motMeleeInstance.solveAuto();
+            // const { grid, words, letters } = await motMeleeInstance.solveAuto();
+            const { grid } = await motMeleeInstance.getGrid();
 
             res.status(200).send({
                 message: "Image importée avec succès",
@@ -92,6 +111,30 @@ app.post("/upload", upload.single("image"), async (req, res) => {
         res.status(500).json({ error: "Erreur lors de l'analyse de l'image" });
     }
 });
+
+app.post("/resolve", async (req, res) => {
+    try {
+        const motMeleeInstance = new motMelee();
+
+        const { wordsResult, letters } = await motMeleeInstance.solve(
+            req.body.grid,
+            req.body.words
+        );
+
+        res.status(200).send({
+            wordsResult: wordsResult,
+            letters: letters,
+        });
+    } catch (error) {
+        console.error("Erreur lors de la résolution de la grille:", error);
+
+        res.status(500).json({
+            error: "Erreur lors de la résolution de la grille",
+        });
+    }
+});
+
+
 
 // Serve HTML
 app.use("*", async (req, res) => {

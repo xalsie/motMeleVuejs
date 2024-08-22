@@ -18,5 +18,8 @@
 </script>
 
 <style scoped>
-/* Ajoutez vos styles ici */
+    img {
+        max-height: 426px;
+        height: auto;
+    }
 </style>

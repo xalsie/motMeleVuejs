@@ -24,6 +24,4 @@ dist-ssr
 *.sln
 *.sw?
 
-# uploads directories
-/uploads/*
 *.traineddata

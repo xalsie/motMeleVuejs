@@ -4,6 +4,7 @@ export class motMelee {
     constructor() {
         this.letterCount = [];
         this.filePath = "";
+        this.grid = [];
     }
 
     setFilePath(filePath) {
@@ -46,9 +47,50 @@ export class motMelee {
         };
     }
 
+    async solve(grid, words) {
+        console.log("start solving");
+
+        console.time("TimerTotal");
+        console.time("timerResolveGrid");
+
+        const { numRows, numCols } = this.calculateGridDimensions(grid);
+        console.log(`numRows: ${numRows} numCols: ${numCols}`);
+        console.log("Lines:", grid);
+
+        const wordsResult = await this.searchWords(grid, numRows, numCols);
+        const letters = await this.displayUnusedLetters(grid);
+
+        console.timeEnd("timerResolveGrid");
+        console.timeEnd("TimerTotal");
+        console.log("end solving");
+
+        return {
+            // grid: grid,
+            wordsResult: wordsResult,
+            letters: letters,
+        };
+    }
+
+    async getGrid() {
+        console.time("timerRecognizeImage");
+
+        const worker = await this.initializeWorker();
+
+        const grid = await this.recognizeImage(worker, this.getFilePath());
+        await worker.terminate();
+
+        console.timeEnd("timerRecognizeImage");
+
+        this.grid = grid;
+
+        return {
+            grid: this.grid
+        };
+    }
+
     async initializeWorker() {
         const worker = await createWorker("fra", 1, {
-            logger: (m) => console.log(m),
+            // logger: (m) => console.log(m),
         });
 
         await worker.setParameters({
@@ -78,6 +120,7 @@ export class motMelee {
     }
 
     async searchWords(grid, numRows, numCols) {
+        let result = [];
         // const words = [ /* Liste des mots */ ];
         const words = [
             // image test 3 : OK : https://www.fortissimots.com/wp-content/uploads/meles_fortissimots_22.pdf
@@ -138,17 +181,22 @@ export class motMelee {
 
             positions.forEach((pos) => {
                 directions.forEach((dir) => {
-                    this.checkWordInDirection(
-                        grid,
-                        word,
-                        pos,
-                        dir,
-                        numRows,
-                        numCols
-                    );
+                    result.push({
+                        word: word,
+                        positions: this.checkWordInDirection(
+                            grid,
+                            word,
+                            pos,
+                            dir,
+                            numRows,
+                            numCols
+                        ),
+                    });
                 });
             });
         });
+
+        return result;
     }
 
     findLetterPositions(grid, letter) {
@@ -165,6 +213,7 @@ export class motMelee {
 
     checkWordInDirection(grid, word, startPos, dir, numRows, numCols) {
         let found = true;
+        let wordsResult = [];
         let currentRow = startPos.row;
         let currentCol = startPos.col;
 
@@ -192,7 +241,13 @@ export class motMelee {
             console.log(
                 `Word "${word}" found starting at (${startPos.row}, ${startPos.col}) and ending at (${currentRow}, ${currentCol}) in direction (${dir.row}, ${dir.col})`
             );
-            this.markLetters(grid, wordPositions);
+            // this.markLetters(grid, wordPositions);
+
+            return {
+                start: { row: startPos.row, col: startPos.col },
+                end: { row: currentRow, col: currentCol },
+                direction: { row: dir.row, col: dir.col },
+            }
         }
     }
 
@@ -230,27 +285,32 @@ export class motMelee {
     }
 
     async displayUnusedLetters(grid) {
+        let unusedLetters = [];
+
         this.letterCount.forEach((line, i) => {
             line.forEach((cell, j) => {
                 if (cell.count === 0) {
-                    console.log(
-                        `Letter "${cell.value}" at position (${i}, ${j}) is never used`
-                    );
+                    // console.log(
+                    //     `Letter "${cell.value}" at position (${i}, ${j}) is never used`
+                    // );
+                    unusedLetters.push(cell.value);
                 }
             });
         });
 
-        const Reset = "\x1b[0m";
-        const FgRed = "\x1b[31m";
-        const BgGray = "\x1b[100m";
+        // const Reset = "\x1b[0m";
+        // const FgRed = "\x1b[31m";
+        // const BgGray = "\x1b[100m";
 
-        grid.forEach((line, i) => {
-            let row = "";
-            line.split("").forEach((letter, j) => {
-                const isWord = this.letterCount[i][j].count === 0;
-                row += isWord ? BgGray + FgRed + letter + Reset : letter;
-            });
-            console.log(row);
-        });
+        // grid.forEach((line, i) => {
+        //     let row = "";
+        //     line.split("").forEach((letter, j) => {
+        //         const isWord = this.letterCount[i][j].count === 0;
+        //         row += isWord ? BgGray + FgRed + letter + Reset : letter;
+        //     });
+        //     console.log(row);
+        // });
+
+        return unusedLetters;
     }
 }
