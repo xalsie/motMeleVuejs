@@ -1,7 +1,7 @@
 <template>
-    <div>
-        <h2>Image importée :</h2>
-        <img :src="imageUrl" alt="Uploaded Image" />
+    <div class="w-1/2">
+        <h2 class="text-2xl font-bold mb-4">Image importée :</h2>
+        <img :src="imageUrl" alt="Uploaded Image" class="w-4/5" />
     </div>
 </template>
 
@@ -18,8 +18,4 @@
 </script>
 
 <style scoped>
-    img {
-        max-height: 426px;
-        height: auto;
-    }
 </style>
