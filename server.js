@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import compression from "compression";
 import express from "express";
-import session from 'express-session';
+import session from "express-session";
 import multer from "multer";
 import path from "node:path";
-import { motMelee } from "./motMelee.js";
+// import { motMelee } from "./src/motMelee.js";
 
 // Constants
 const isProduction = process.env.NODE_ENV === "production";
@@ -52,89 +52,92 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const shouldCompress = (req, res) => {
-    if (req.headers['x-no-compression']) {
+    if (req.headers["x-no-compression"]) {
         return false;
     }
     return compression.filter(req, res);
 };
 
 app.use(express.static("public"));
-app.use(session({
-	secret: '001/011100110110010101100011011100100110010101110100',
-	resave: true,
-	saveUninitialized: true
-}));
-app.use(compression({ // Compress all HTTP responses
-    filter: shouldCompress,
-    threshold: 0
-}));
+app.use(
+    session({
+        secret: "001/011100110110010101100011011100100110010101110100",
+        resave: true,
+        saveUninitialized: true,
+    })
+);
+app.use(
+    compression({
+        // Compress all HTTP responses
+        filter: shouldCompress,
+        threshold: 0,
+    })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use(
-    "/uploads",
-    express.static(
-        path.resolve(path.dirname(new URL(import.meta.url).pathname), "uploads")
-    )
-);
+// app.use(
+//     "/uploads",
+//     express.static(
+//         path.resolve(path.dirname(new URL(import.meta.url).pathname), "uploads")
+//     )
+// );
 
-app.post("/upload", upload.single("image"), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).send("Aucun fichier sélectionné.");
-    }
+// app.post("/upload", upload.single("image"), async (req, res) => {
+//     if (!req.file) {
+//         return res.status(400).send("Aucun fichier sélectionné.");
+//     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+//     const fileUrl = `/uploads/${req.file.filename}`;
 
-    try {
-        const motMeleeInstance = new motMelee();
-        motMeleeInstance.setFilePath(path.resolve(req.file.path));
+//     try {
+//         const motMeleeInstance = new motMelee();
+//         motMeleeInstance.setFilePath(path.resolve(req.file.path));
 
-        try {
-            // const { grid, words, letters } = await motMeleeInstance.solveAuto();
-            const { grid } = await motMeleeInstance.getGrid();
+//         try {
+//             // const { grid, words, letters } = await motMeleeInstance.solveAuto();
+//             const { grid } = await motMeleeInstance.getGrid();
 
-            res.status(200).send({
-                message: "Image importée avec succès",
-                fileUrl: fileUrl,
-                file: req.file,
-                grid: grid,
-            });
-        } catch (error) {
-            console.error("Erreur lors de la résolution de la grille:", error);
+//             res.status(200).send({
+//                 message: "Image importée avec succès",
+//                 fileUrl: fileUrl,
+//                 file: req.file,
+//                 grid: grid,
+//             });
+//         } catch (error) {
+//             console.error("Erreur lors de la résolution de la grille:", error);
 
-            res.status(500).json({
-                error: "Erreur lors de la résolution de la grille",
-            });
-        }
-    } catch (error) {
-        console.error("Erreur lors de l'analyse de l'image:", error);
-        res.status(500).json({ error: "Erreur lors de l'analyse de l'image" });
-    }
-});
+//             res.status(500).json({
+//                 error: "Erreur lors de la résolution de la grille",
+//             });
+//         }
+//     } catch (error) {
+//         console.error("Erreur lors de l'analyse de l'image:", error);
+//         res.status(500).json({ error: "Erreur lors de l'analyse de l'image" });
+//     }
+// });
 
-app.post("/resolve", async (req, res) => {
-    try {
-        const motMeleeInstance = new motMelee();
+// app.post("/resolve", async (req, res) => {
+//     try {
+//         const motMeleeInstance = new motMelee();
 
-        const { wordsResult, letters } = await motMeleeInstance.solve(
-            req.body.grid,
-            req.body.words
-        );
+//         const { wordsResult, letters } = await motMeleeInstance.solve(
+//             req.body.grid,
+//             req.body.words
+//         );
 
-        res.status(200).send({
-            wordsResult: wordsResult,
-            letters: letters,
-        });
-    } catch (error) {
-        console.error("Erreur lors de la résolution de la grille:", error);
+//         res.status(200).send({
+//             wordsResult: wordsResult,
+//             letters: letters,
+//         });
+//     } catch (error) {
+//         console.error("Erreur lors de la résolution de la grille:", error);
 
-        res.status(500).json({
-            error: "Erreur lors de la résolution de la grille",
-        });
-    }
-});
-
-
+//         res.status(500).json({
+//             error: "Erreur lors de la résolution de la grille",
+//         });
+//     }
+// });
 
 // Serve HTML
 app.use("*", async (req, res) => {
