@@ -6,16 +6,16 @@
 </template>
 
 <script>
-    export default {
-        name: 'DisplayImage',
-        props: {
-            imageUrl: {
-                type: String,
-                required: true,
-            },
+export default {
+    name: "DisplayImage",
+    props: {
+        imageUrl: {
+            type: String,
+            required: false,
+            default: "",
         },
-    };
+    },
+};
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

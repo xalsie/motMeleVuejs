@@ -84,7 +84,8 @@ export default {
     props: {
         url: {
             type: String,
-            required: true,
+            required: false,
+            default: "",
         },
         width: {
             type: [String, Number],
@@ -100,7 +101,7 @@ export default {
         },
         removable: {
             type: Boolean,
-            default: true,
+            default: false,
         },
     },
 

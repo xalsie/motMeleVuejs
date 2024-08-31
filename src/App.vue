@@ -17,7 +17,7 @@ import { ref } from "vue";
 
     <div
         class="image flex flex-col items-center"
-        v-show="imageGridUrl && !output"
+        v-show="imageGridUrl && !output.length > 0"
     >
         <div class="">
             <h1 class="text-2xl font-bold">
@@ -52,7 +52,7 @@ import { ref } from "vue";
         </div>
     </div>
 
-    <div class="flex flex-row gap-4" v-show="!resolved && output">
+    <div class="flex flex-row gap-4" v-show="!resolved && output.length > 0">
         <DisplayImage v-show="imageGridUrl" :imageUrl="imageGridUrl" />
 
         <DisplayGrid
@@ -74,13 +74,12 @@ import { ref } from "vue";
 
 <script>
 const imageGridUrl = ref("");
-const imageWordsUrl = ref("");
 const grid = ref([]);
 const words = ref([]);
 const resolved = ref(false);
 
 const areas = ref([]);
-const output = ref("");
+const output = ref([]);
 
 export default {
     components: {
@@ -104,22 +103,17 @@ export default {
             areas.value = [];
         },
         valideAreas() {
-            output.value = JSON.stringify(areas.value, undefined, 2);
-            console.log("Areas saved:", areas.value);
+            // output.value = JSON.stringify(areas.value, undefined, 2);
+            output.value = areas.value;
 
             this.$emit("grid-imported", areas.value);
         },
         handleGridAnalysis(gridData) {
-            console.log("Grid analysis:", gridData);
             grid.value = gridData.grid;
             words.value = gridData.words;
         },
         handleImageGridImported(imageData) {
             imageGridUrl.value = imageData;
-        },
-        handleWordsImported(imageData) {
-            console.log("Image Words imported:", imageData);
-            // imageWordsUrl.value = imageData;
         },
         handleGridImported(gridData) {
             grid.value = gridData;
@@ -133,7 +127,8 @@ export default {
             words.value = [];
             resolved.value = false;
 
-            console.log("Grid reseted");
+            areas.value = [];
+            output.value = [];
         },
     },
 };

@@ -18,7 +18,8 @@ export default {
     props: {
         title: {
             type: String,
-            required: true,
+            required: false,
+            default: "Importer une image",
         },
     },
     data() {
@@ -39,6 +40,8 @@ export default {
                 };
                 reader.readAsDataURL(file);
             }
+
+            event.target.value = "";
         },
     },
 };
