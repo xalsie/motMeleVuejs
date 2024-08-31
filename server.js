@@ -2,9 +2,6 @@ import fs from "node:fs/promises";
 import compression from "compression";
 import express from "express";
 import session from "express-session";
-import multer from "multer";
-import path from "node:path";
-// import { motMelee } from "./src/motMelee.js";
 
 // Constants
 const isProduction = process.env.NODE_ENV === "production";
@@ -33,23 +30,11 @@ if (!isProduction) {
     });
     app.use(vite.middlewares);
 } else {
-    const compression = (await import("compression")).default;
+    // const compression = (await import("compression")).default;
     const sirv = (await import("sirv")).default;
-    app.use(compression());
+    // app.use(compression());
     app.use(base, sirv("./dist/client", { extensions: [] }));
 }
-
-// Configuration de multer pour stocker les fichiers uploadés
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "uploads/");
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    },
-});
-
-const upload = multer({ storage });
 
 const shouldCompress = (req, res) => {
     if (req.headers["x-no-compression"]) {
@@ -75,69 +60,6 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-// app.use(
-//     "/uploads",
-//     express.static(
-//         path.resolve(path.dirname(new URL(import.meta.url).pathname), "uploads")
-//     )
-// );
-
-// app.post("/upload", upload.single("image"), async (req, res) => {
-//     if (!req.file) {
-//         return res.status(400).send("Aucun fichier sélectionné.");
-//     }
-
-//     const fileUrl = `/uploads/${req.file.filename}`;
-
-//     try {
-//         const motMeleeInstance = new motMelee();
-//         motMeleeInstance.setFilePath(path.resolve(req.file.path));
-
-//         try {
-//             // const { grid, words, letters } = await motMeleeInstance.solveAuto();
-//             const { grid } = await motMeleeInstance.getGrid();
-
-//             res.status(200).send({
-//                 message: "Image importée avec succès",
-//                 fileUrl: fileUrl,
-//                 file: req.file,
-//                 grid: grid,
-//             });
-//         } catch (error) {
-//             console.error("Erreur lors de la résolution de la grille:", error);
-
-//             res.status(500).json({
-//                 error: "Erreur lors de la résolution de la grille",
-//             });
-//         }
-//     } catch (error) {
-//         console.error("Erreur lors de l'analyse de l'image:", error);
-//         res.status(500).json({ error: "Erreur lors de l'analyse de l'image" });
-//     }
-// });
-
-// app.post("/resolve", async (req, res) => {
-//     try {
-//         const motMeleeInstance = new motMelee();
-
-//         const { wordsResult, letters } = await motMeleeInstance.solve(
-//             req.body.grid,
-//             req.body.words
-//         );
-
-//         res.status(200).send({
-//             wordsResult: wordsResult,
-//             letters: letters,
-//         });
-//     } catch (error) {
-//         console.error("Erreur lors de la résolution de la grille:", error);
-
-//         res.status(500).json({
-//             error: "Erreur lors de la résolution de la grille",
-//         });
-//     }
-// });
 
 // Serve HTML
 app.use("*", async (req, res) => {
