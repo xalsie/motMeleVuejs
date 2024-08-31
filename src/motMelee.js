@@ -3,6 +3,8 @@ export class motMelee {
         this.letterCount = [];
         this.grid = [];
         this.words = [];
+        this.numRows = 0;
+        this.numCols = 0;
 
         this.isLogger = logger || false;
     }
@@ -11,42 +13,49 @@ export class motMelee {
         this.grid = grid;
     }
 
-    setWords(words) {
-        this.words = words;
-    }
-
     getGrid() {
         return this.grid;
+    }
+
+    setWords(words) {
+        this.words = words;
     }
 
     getWords() {
         return this.words;
     }
 
-    logger(...message) {
-        if (this.isLogger) {
-            console.log(...message);
-        }
+    setNumRows(numRows) {
+        this.numRows = numRows;
+    }
+
+    getNumRows() {
+        return this.numRows;
+    }
+
+    setNumCols(numCols) {
+        this.numCols = numCols;
+    }
+
+    getNumCols() {
+        return this.numCols;
     }
 
     async solve() {
-        this.logger("start solving");
+        console.time("timerResolveGrid");
 
-        if (this.isLogger) console.time("timerResolveGrid");
+        this.calculateGridDimensions();
 
-        const { numRows, numCols } = this.calculateGridDimensions();
-        this.logger(`numRows: ${numRows} numCols: ${numCols}`);
+        const numRows = this.getNumRows();
+        const numCols = this.getNumCols();
+        const _data = {};
 
-        const wordsResult = await this.searchWords(numRows, numCols);
-        const unusedLetters = await this.displayUnusedLetters();
+        _data.wordsResult = await this.searchWords(numRows, numCols);
+        _data.unusedLetters = await this.displayUnusedLetters();
 
-        if (this.isLogger) console.timeEnd("timerResolveGrid");
-        this.logger("end solving");
+        console.timeEnd("timerResolveGrid");
 
-        return {
-            wordsResult: wordsResult,
-            unusedLetters: unusedLetters,
-        };
+        return _data;
     }
 
     calculateGridDimensions() {
@@ -55,12 +64,14 @@ export class motMelee {
         const cells = numCols * grid.length;
         const numRows = Math.ceil(cells / numCols);
 
-        return { numRows, numCols };
+        this.setNumRows(numRows);
+        this.setNumCols(numCols);
     }
 
-    async searchWords(numRows, numCols) {
+    async searchWords() {
         const words = this.getWords();
-
+        const numRows = this.getNumRows();
+        const numCols = this.getNumCols();
         let result = [];
 
         words.forEach((word) => {
@@ -82,24 +93,40 @@ export class motMelee {
             positions.forEach((pos) => {
                 directions.forEach((dir) => {
                     if (
-                        !(pos.row === 0 && dir.row === -1) ||
-                        !(pos.row === numRows - 1 && dir.row === 1) ||
-                        !(pos.col === 0 && dir.col === -1) ||
-                        !(pos.col === numCols - 1 && dir.col === 1)
+                        (dir.row === -1 && pos.row - wordLength < -1) || // up
+                        (dir.row === 1 && pos.row + wordLength > numRows) || // down
+                        (dir.col === -1 && pos.col - wordLength < -1) || // left
+                        (dir.col === 1 && pos.col + wordLength > numCols) || // right
+                        (dir.row === -1 &&
+                            dir.col === -1 &&
+                            (pos.row - wordLength < -1 ||
+                                pos.col - wordLength < -1)) || // up-left
+                        (dir.row === -1 &&
+                            dir.col === 1 &&
+                            (pos.row - wordLength < -1 ||
+                                pos.col + wordLength > numCols)) || // up-right
+                        (dir.row === 1 &&
+                            dir.col === -1 &&
+                            (pos.row + wordLength > numRows ||
+                                pos.col - wordLength < -1)) || // down-left
+                        (dir.row === 1 &&
+                            dir.col === 1 &&
+                            (pos.row + wordLength > numRows ||
+                                pos.col + wordLength > numCols)) // down-right
                     ) {
-                        const wordPositions = this.checkWordInDirection(
-                            word,
-                            pos,
-                            dir,
-                            numRows,
-                            numCols
-                        );
-                        if (wordPositions) {
-                            result.push({
-                                word: word,
-                                positions: wordPositions,
-                            });
-                        }
+                        return;
+                    }
+
+                    const wordPositions = this.checkWordInDirection(
+                        word,
+                        pos,
+                        dir
+                    );
+                    if (wordPositions) {
+                        result.push({
+                            word: word,
+                            positions: wordPositions,
+                        });
                     }
                 });
             });
@@ -119,61 +146,62 @@ export class motMelee {
                 }
             }
         }
+
         return positions;
     }
 
-    checkWordInDirection(word, startPos, dir, numRows, numCols) {
+    checkWordInDirection(word, startPos, dir) {
         const grid = this.getGrid();
-        let found = true;
-        let wordsResult = [];
+        const numRows = this.getNumRows();
+        const numCols = this.getNumCols();
         let currentRow = startPos.row;
         let currentCol = startPos.col;
+        let wordLength = word.length - 1;
+
+        const endRow = currentRow + dir.row * wordLength;
+        const endCol = currentCol + dir.col * wordLength;
+
+        if (
+            endRow < 0 ||
+            endRow >= numRows ||
+            endCol < 0 ||
+            endCol >= numCols
+        ) {
+            return null;
+        }
 
         const wordPositions = [{ row: currentRow, col: currentCol }];
 
-        for (let i = 1; i < word.length; i++) {
+        for (let i = 0; i < word.length; i++) {
+            if (grid[currentRow][currentCol] !== word[i]) {
+                return null;
+            }
             currentRow += dir.row;
             currentCol += dir.col;
-
-            if (
-                currentRow < 0 ||
-                currentRow >= numRows ||
-                currentCol < 0 ||
-                currentCol >= numCols ||
-                grid[currentRow][currentCol] !== word[i]
-            ) {
-                found = false;
-                break;
-            }
 
             wordPositions.push({ row: currentRow, col: currentCol });
         }
 
-        if (found) {
-            this.logger(
-                `Word "${word}" found starting at (${startPos.row}, ${startPos.col}) and ending at (${currentRow}, ${currentCol}) in direction (${dir.row}, ${dir.col})`
-            );
+        currentRow -= dir.row;
+        currentCol -= dir.col;
 
-            return {
-                start: { row: startPos.row, col: startPos.col },
-                end: { row: currentRow, col: currentCol },
-                direction: { row: dir.row, col: dir.col },
-            };
-        }
+        this.markLetters(wordPositions);
+
+        return {
+            start: { row: startPos.row, col: startPos.col },
+            end: { row: currentRow, col: currentCol },
+            direction: { row: dir.row, col: dir.col },
+        };
     }
 
-    markLetters(grid, wordPositions) {
-        const Reset = "\x1b[0m";
-        const FgRed = "\x1b[31m";
-        const BgGray = "\x1b[100m";
+    markLetters(wordPositions) {
+        const grid = this.getGrid();
 
         grid.forEach((line, i) => {
-            let row = "";
             line.split("").forEach((letter, j) => {
                 const isWord = wordPositions.some(
                     (pos) => pos.row === i && pos.col === j
                 );
-                row += isWord ? BgGray + FgRed + letter + Reset : letter;
 
                 if (this.letterCount[i] === undefined) {
                     this.letterCount[i] = [];
@@ -190,8 +218,6 @@ export class motMelee {
                     this.letterCount[i][j].count += 1;
                 }
             });
-
-            this.logger(row);
         });
     }
 
@@ -201,7 +227,14 @@ export class motMelee {
         this.letterCount.forEach((line, i) => {
             line.forEach((cell, j) => {
                 if (cell.count === 0) {
-                    unusedLetters.push(cell.value);
+                    unusedLetters.push({
+                        letter: cell.value,
+                        positions: {
+                            start: { row: i, col: j },
+                            end: { row: i, col: j },
+                            direction: { row: 0, col: 0 },
+                        },
+                    });
                 }
             });
         });
